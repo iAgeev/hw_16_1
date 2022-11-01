@@ -1,6 +1,6 @@
 import os
 import json
-from flask import Flask,jsonify,request
+from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -96,37 +96,144 @@ def db_load(file_json, model):
         db.session.commit()
 
 
-@app.route('/users', methods=["GET", "PUT"])
+@app.route('/users', methods=["GET", "POST"])
 def users_page():
     if request.method == "GET":
         return jsonify([user.as_dict() for user in User.query.all()])
-    if request.method == "PUT":
-        pass
+    if request.method == "POST":
+        user = json.loads(request.data)
+        db.session.add(
+            User(
+                id=user.get("id"),
+                first_name=user.get("first_name"),
+                last_name=user.get("last_name"),
+                age=user.get("age"),
+                email=user.get("email"),
+                role=user.get("role"),
+                phone=user.get("phone"),
+            )
+        )
+        db.session.commit()
+        return f"Пользователь с id:{user['id']} создан"
 
 
-@app.route('/users/<int:pk>')
+@app.route('/users/<int:pk>', methods=["PUT", "GET", "DELETE"])
 def user_page(pk):
-    return jsonify(User.query.get(pk).as_dict())
+    if request.method == "GET":
+        return jsonify(User.query.get(pk).as_dict())
+    if request.method == "PUT":
+        user_id = User.query.get(pk)
+        user = json.loads(request.data)
+
+        user_id.first_name = user["first_name"]
+        user_id.last_name = user["last_name"]
+        user_id.age = user["age"]
+        user_id.email = user["email"]
+        user_id.role = user["role"]
+        user_id.phone = user["phone"]
+
+        db.session.add(user_id)
+        db.session.commit()
+
+        return f"Данные пользователя с id:{user_id.id} обновлены"
+
+    if request.method == "DELETE":
+        user = User.query.get(pk)
+        db.session.delete(user)
+        db.session.commit()
+        return f"Пользователь с id:{user.id} удалён"
 
 
-@app.route('/orders', methods=["GET", "PUT"])
+@app.route('/orders', methods=["GET", "POST"])
 def orders_page():
-    return jsonify([order.as_dict() for order in Order.query.all()])
+    if request.method == "GET":
+        return jsonify([order.as_dict() for order in Order.query.all()])
+    if request.method == "POST":
+        order = json.loads(request.data)
+        db.session.add(
+            Order(
+                id=order.get("id"),
+                name=order.get("name"),
+                description=order.get("description"),
+                start_date=order.get("start_date"),
+                end_date=order.get("end_date"),
+                address=order.get("address"),
+                price=order.get("price"),
+                customer_id=order.get("customer_id"),
+                executor_id=order.get("executor_id"),
+            )
+        )
+        db.session.commit()
+        return f"Заказ с id:{order['id']} создан"
 
 
-@app.route('/orders/<int:pk>')
+@app.route('/orders/<int:pk>', methods=["PUT", "GET", "DELETE"])
 def order_page(pk):
-    return jsonify(Order.query.get(pk).as_dict())
+    if request.method == "GET":
+        return jsonify(Order.query.get(pk).as_dict())
+    if request.method == "PUT":
+        order_id = Order.query.get(pk)
+        order = json.loads(request.data)
+
+        order_id.name = order["name"]
+        order_id.description = order["description"]
+        order_id.start_date = order["start_date"]
+        order_id.end_date = order["end_date"]
+        order_id.address = order["address"]
+        order_id.price = order["price"]
+        order_id.customer_id = order["customer_id"]
+        order_id.executor_id = order["executor_id"]
+
+        db.session.add(order_id)
+        db.session.commit()
+
+        return f"Данные заказа с id:{order_id.id} обновлены"
+
+    if request.method == "DELETE":
+        order = Order.query.get(pk)
+        db.session.delete(order)
+        db.session.commit()
+        return f"Заказ с id:{order.id} удалён"
 
 
-@app.route('/offers', methods=["GET", "PUT"])
+@app.route('/offers', methods=["GET", "POST"])
 def offers_page():
-    return jsonify([offer.as_dict() for offer in Offer.query.all()])
+    if request.method == "GET":
+        return jsonify([offer.as_dict() for offer in Offer.query.all()])
+    if request.method == "POST":
+        offer = json.loads(request.data)
+        db.session.add(
+            Offer(
+                id=offer.get("id"),
+                order_id=offer.get("order_id"),
+                executor_id=offer.get("executor_id"),
+            )
+        )
+        db.session.commit()
+        return f"Предложение с id:{offer['id']} создано"
 
 
-@app.route('/offers/<int:pk>')
+@app.route('/offers/<int:pk>', methods=["PUT", "GET", "DELETE"])
 def offer_page(pk):
-    return jsonify(Offer.query.get(pk).as_dict())
+    if request.method == "GET":
+        return jsonify(Offer.query.get(pk).as_dict())
+    if request.method == "PUT":
+        offer_id = Offer.query.get(pk)
+        offer = json.loads(request.data)
+
+        offer_id.order_id = offer["order_id"]
+        offer_id.executor_id = offer["executor_id"]
+
+        db.session.add(offer_id)
+        db.session.commit()
+
+        return f"Данные предложения с id:{offer_id.id} обновлены"
+
+    if request.method == "DELETE":
+        offer = Offer.query.get(pk)
+        db.session.delete(offer)
+        db.session.commit()
+        return f"Предложение с id:{offer.id} удалёно"
 
 
 if __name__ == '__main__':
